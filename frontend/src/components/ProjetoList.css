@@ -1,0 +1,54 @@
+.planilha {
+    border-collapse: collapse;
+    background-color: white;
+    border: 1px solid #ddd;
+    width: 100%;
+}
+
+.planilha th,
+.planilha td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+    min-height: 40px;
+}
+
+.planilha th {
+    background-color: #1e40af;
+    color: white;
+    font-weight: bold;
+}
+
+.planilha td {
+    background-color: #f9fafb;
+}
+
+.table-container {
+    display: flex;
+    flex-direction: row; /* Alterado de column para row */
+    gap: 20px;
+    flex-wrap: nowrap; /* Garante que as tabelas não quebrem em linhas menores */
+}
+
+img.w-12 {
+    max-width: 48px; /* Corrigido de 12px para 48px (ajuste para o tamanho da medalha) */
+    height: auto;
+}
+
+/* Estilo para o texto não expandido */
+.text-center p {
+    margin: 4px 0;
+}
+
+button .fa-plus {
+    font-size: 1.2rem;
+}
+@media (max-width: 768px) {
+    .table-container {
+        flex-direction: column;
+    }
+    .planilha {
+        width: 100%;
+    }
+}
