@@ -1,22 +1,18 @@
 import { DataSource } from "typeorm";
-import { Premio } from "./entities/Premio";
-import { Usuario } from "./entities/Usuario";
-import { Projeto } from "./entities/Projeto";
-import { Avaliacao } from "./entities/Avaliacao";
 import * as dotenv from "dotenv";
 
 dotenv.config();
 
 export const AppDataSource = new DataSource({
     type: "mysql",
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT || "3306"),
-    username: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
-    synchronize: true, // Use migrações em produção
+    host: process.env.DB_HOST || "localhost", // Fallback para desenvolvimento
+    port: parseInt(process.env.DB_PORT || "3306"), // Fallback já presente
+    username: process.env.DB_USERNAME || "root", // Fallback para desenvolvimento
+    password: process.env.DB_PASSWORD || "Francandrade@6810", // Fallback para desenvolvimento
+    database: process.env.DB_DATABASE || "gerenciamento_projetos", // Fallback para desenvolvimento
+    synchronize: true, // Use migrações em produção (defina como false em produção)
     logging: true, // Ativado para depuração
-    entities: [Premio, Usuario, Projeto, Avaliacao],
-    migrations: [],
-    subscribers: [],
+    entities: ["src/entities/*.ts"], // Caminho dinâmico para entidades
+    migrations: ["src/migration/*.ts"], // Caminho para migrações (ajuste se necessário)
+    subscribers: [], // Adicione subscribers se houver
 });

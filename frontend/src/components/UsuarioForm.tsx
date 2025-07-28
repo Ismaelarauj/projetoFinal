@@ -115,9 +115,11 @@ const UsuarioForm: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
 
     return (
         <div className="min-h-screen bg-innovate-gray">
-            <section className="bg-hero-pattern bg-cover bg-center py-20 text-center text-innovate-dark">
-                <h2 className="text-4xl font-display mb-4">Registre-se para Criar e Gerenciar Projetos</h2>
-                <p className="text-lg max-w-2xl mx-auto">Junte-se ao Innovate Hub e impulsione suas ideias com ferramentas de ponta para geração de projetos inovadores.</p>
+            <section className="bg-hero-pattern bg-cover bg-center py-20 text-center text-innovate-dark flex justify-center">
+                <div className="text-center">
+                    <h2 className="text-4xl font-display mb-4">Registre-se para Criar e Gerenciar Projetos</h2>
+                    <p className="text-lg max-w-2xl mx-auto" style={{ textAlign: 'center' }}>Junte-se ao Innovate Hub e impulsione suas ideias com ferramentas de ponta para geração de projetos inovadores.</p>
+                </div>
             </section>
             <section className="max-w-6xl mx-auto px-6 py-12">
                 <div className="bg-white rounded-xl shadow-xl p-8 border border-innovate-gray">

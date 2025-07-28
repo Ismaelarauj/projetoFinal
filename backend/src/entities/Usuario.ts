@@ -63,10 +63,10 @@ export class Usuario {
 
     @Column({
         type: "enum",
-        enum: ["autor", "avaliador"],
+        enum: ["autor", "avaliador", "admin"],
         default: "autor"
     })
-    tipo!: "autor" | "avaliador";
+    tipo!: "autor" | "avaliador" | "admin";
 
     @ManyToMany(() => Projeto, (projeto) => projeto.autores)
     projetos!: Projeto[];

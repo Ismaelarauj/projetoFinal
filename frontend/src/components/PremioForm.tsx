@@ -8,9 +8,11 @@ interface CronogramaItem {
 }
 
 const PremioForm: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
-    const [premio, setPremio] = useState({ nome: "", descricao: "", cronograma: [] as CronogramaItem[], ano: "" });
+    const currentYear = new Date().getFullYear();
+    const [premio, setPremio] = useState({ nome: "", descricao: "", cronograma: [] as CronogramaItem[], ano: `${currentYear}` });
     const [premiosCadastrados, setPremiosCadastrados] = useState<{ id: number; nome: string; ano: number }[]>([]);
     const [feedback, setFeedback] = useState<string | null>(null);
+    const [refresh, setRefresh] = useState(0); // Estado para forçar recarregamento
 
     useEffect(() => {
         const fetchPremios = async () => {
@@ -22,7 +24,7 @@ const PremioForm: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
             }
         };
         fetchPremios();
-    }, []);
+    }, [refresh]); // Recarrega quando refresh muda
 
     const handleAddCronograma = () => {
         setPremio(prev => ({
@@ -55,8 +57,8 @@ const PremioForm: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const anoNum = parseInt(premio.ano);
-        if (!premio.nome.trim() || !premio.descricao.trim() || premio.cronograma.length === 0 || isNaN(anoNum) || anoNum <= 0) {
-            setFeedback("Todos os campos são obrigatórios, incluindo pelo menos um cronograma, e ano deve ser válido");
+        if (!premio.nome.trim() || !premio.descricao.trim() || premio.cronograma.length === 0 || isNaN(anoNum) || anoNum < currentYear) {
+            setFeedback(`Todos os campos são obrigatórios, incluindo pelo menos um cronograma, e ano deve ser válido a partir de ${currentYear}`);
             return;
         }
 
@@ -81,10 +83,9 @@ const PremioForm: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
 
             const response = await axios.post("http://localhost:3001/premios", payload);
             setFeedback("Prêmio criado com sucesso!");
-            setPremio({ nome: "", descricao: "", cronograma: [], ano: "" });
+            setPremio({ nome: "", descricao: "", cronograma: [], ano: `${currentYear}` });
+            setRefresh(prev => prev + 1); // Força recarregamento da lista
             if (onCreate) onCreate();
-            const updatedPremios = await axios.get("http://localhost:3001/premios");
-            setPremiosCadastrados(updatedPremios.data.map((p: any) => ({ id: p.id, nome: p.nome, ano: p.ano })));
         } catch (error: any) {
             setFeedback(error.response?.data?.message || "Erro ao criar prêmio");
         }
@@ -92,9 +93,11 @@ const PremioForm: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
 
     return (
         <div className="min-h-screen bg-innovate-gray">
-            <section className="bg-hero-pattern bg-cover bg-center py-20 text-center text-innovate-dark">
-                <h2 className="text-4xl font-display mb-4">Crie um Novo Prêmio</h2>
-                <p className="text-lg max-w-2xl mx-auto">Reconheça a excelência nos projetos do Innovate Hub.</p>
+            <section className="bg-hero-pattern bg-cover bg-center py-20 text-center text-innovate-dark flex justify-center">
+                <div className="text-center">
+                    <h2 className="text-4xl font-display mb-4">Crie um Novo Prêmio</h2>
+                    <p className="text-lg max-w-2xl mx-auto" style={{ textAlign: 'center' }}>Reconheça a excelência nos projetos do Innovate Hub.</p>
+                </div>
             </section>
             <section className="max-w-6xl mx-auto px-6 py-12">
                 <div className="bg-white rounded-xl shadow-xl p-8 border border-innovate-gray">
@@ -185,6 +188,7 @@ const PremioForm: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
                                 className="w-full p-3 border border-innovate-gray rounded-lg focus:outline-none focus:ring-2 focus:ring-innovate-accent transition"
                                 value={premio.ano}
                                 onChange={handleChange}
+                                min={currentYear}
                                 required
                             />
                         </div>
@@ -192,7 +196,7 @@ const PremioForm: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
                             <button
                                 type="submit"
                                 className="w-full bg-innovate-blue hover:bg-innovate-accent text-white font-semibold py-3 rounded-lg transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                disabled={!premio.nome.trim() || !premio.descricao.trim() || premio.cronograma.length === 0 || !premio.ano.trim() || parseInt(premio.ano) <= 0}
+                                disabled={!premio.nome.trim() || !premio.descricao.trim() || premio.cronograma.length === 0 || !premio.ano.trim() || parseInt(premio.ano) < currentYear}
                             >
                                 Criar Prêmio
                             </button>

@@ -25,10 +25,14 @@ export class UsuarioRepository {
         });
     }
 
-    async findAllByType(tipo: "autor" | "avaliador"): Promise<Usuario[]> {
+    async findAllByType(tipo: "autor" | "avaliador" | "admin"): Promise<Usuario[]> {
         return this.repository.find({
             where: { tipo },
             relations: ["projetos", "avaliacoes"]
         });
+    }
+
+    async findByEmail(email: string): Promise<Usuario | null> {
+        return this.repository.findOneBy({ email });
     }
 }

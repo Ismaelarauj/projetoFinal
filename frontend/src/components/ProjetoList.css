@@ -26,27 +26,33 @@
 
 .table-container {
     display: flex;
-    flex-direction: row; /* Alterado de column para row */
+    flex-direction: row;
     gap: 20px;
-    flex-wrap: nowrap; /* Garante que as tabelas não quebrem em linhas menores */
+    flex-wrap: nowrap;
+    justify-content: center; /* Adicionado para centralizar horizontalmente os filhos */
+    width: 100%; /* Garante que o contêiner ocupe a largura total */
 }
 
 img.w-12 {
-    max-width: 48px; /* Corrigido de 12px para 48px (ajuste para o tamanho da medalha) */
+    max-width: 48px;
     height: auto;
 }
 
-/* Estilo para o texto não expandido */
+/* Removido o .text-center p para evitar conflitos, e centralização ajustada */
 .text-center p {
     margin: 4px 0;
+    text-align: center !important; /* Força a centralização do texto */
 }
 
+/* Ajuste para o botão FaPlus */
 button .fa-plus {
     font-size: 1.2rem;
 }
+
 @media (max-width: 768px) {
     .table-container {
         flex-direction: column;
+        align-items: center; /* Centraliza os itens verticalmente em telas menores */
     }
     .planilha {
         width: 100%;

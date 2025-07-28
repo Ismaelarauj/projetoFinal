@@ -63,7 +63,7 @@ const AvaliacaoForm: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
             setAvaliacao({ nota: null, parecer: "" });
             setProjetoId(null);
             setAvaliadorId(null);
-            if (onCreate) onCreate(); // Notifica o pai para atualizar a lista
+            if (onCreate) onCreate();
         } catch (error) {
             const axiosError = error as AxiosError;
             let errorMessage = "Erro desconhecido ao criar avaliação";
@@ -90,9 +90,11 @@ const AvaliacaoForm: React.FC<{ onCreate?: () => void }> = ({ onCreate }) => {
 
     return (
         <div className="min-h-screen bg-innovate-gray">
-            <section className="bg-hero-pattern bg-cover bg-center py-20 text-center text-innovate-dark">
-                <h2 className="text-4xl font-display mb-4">Registre uma Nova Avaliação</h2>
-                <p className="text-lg max-w-2xl mx-auto">Avalie projetos com precisão e contribua para o sucesso do Innovate Hub.</p>
+            <section className="bg-hero-pattern bg-cover bg-center py-20 text-center text-innovate-dark flex justify-center">
+                <div className="text-center">
+                    <h2 className="text-4xl font-display mb-4">Registre uma Nova Avaliação</h2>
+                    <p className="text-lg max-w-2xl mx-auto" style={{ textAlign: 'center' }}>Avalie projetos com precisão e contribua para o sucesso do Innovate Hub.</p>
+                </div>
             </section>
             <section className="max-w-6xl mx-auto px-6 py-12">
                 <div className="bg-white rounded-xl shadow-xl p-8 border border-innovate-gray">

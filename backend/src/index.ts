@@ -11,6 +11,12 @@ import { Projeto } from "./entities/Projeto";
 import { Avaliacao } from "./entities/Avaliacao";
 import cors from "cors";
 import { In } from "typeorm";
+import { AdminInitializer } from "./AdminInitializer";
+import * as bcrypt from "bcryptjs";
+import * as jwt from "jsonwebtoken";
+import * as dotenv from "dotenv"; // Importação do dotenv
+
+dotenv.config(); // Carrega as variáveis de ambiente do .env
 
 const app = express();
 app.use(express.json());
@@ -21,9 +27,15 @@ const usuarioRepository = new UsuarioRepository();
 const projetoRepository = new ProjetoRepository();
 const avaliacaoRepository = new AvaliacaoRepository();
 
-// Inicializar conexão com o banco
+// Configuração da chave secreta para JWT usando variável de ambiente
+const JWT_SECRET = process.env.JWT_SECRET || "fallback-secreta"; // Fallback para desenvolvimento
+
+// Inicializar conexão com o banco e chamar o inicializador de admin
 AppDataSource.initialize()
-    .then(() => {})
+    .then(async () => {
+        const adminInitializer = new AdminInitializer();
+        await adminInitializer.initializeAdmin();
+    })
     .catch((err) => {
         throw new Error(`Erro ao conectar ao banco de dados: ${(err as Error).message}`);
     });
@@ -117,14 +129,20 @@ app.delete("/premios/:id", async (req: Request, res: Response) => {
 
 // Endpoints: Usuários
 app.post("/usuarios", async (req: Request, res: Response) => {
+    const { tipo, ...usuarioData } = req.body;
+    if (!tipo || !["autor", "avaliador"].includes(tipo)) {
+        return res.status(400).json({ message: "Tipo deve ser 'autor' ou 'avaliador'" });
+    }
     const usuario = new Usuario();
-    Object.assign(usuario, req.body);
+    Object.assign(usuario, usuarioData, { tipo });
     const errors = await validate(usuario);
     if (errors.length > 0) {
         return res.status(400).json({ message: "Campos obrigatórios ausentes ou inválidos", details: errors });
     }
+    const salt = await bcrypt.genSalt(10);
+    usuario.senha = await bcrypt.hash(usuario.senha, salt);
     try {
-        const newUsuario = await usuarioRepository.create(req.body);
+        const newUsuario = await usuarioRepository.create(usuario);
         res.status(201).json(newUsuario);
     } catch (error) {
         res.status(500).json({ message: "Erro ao criar usuário", details: (error as Error).message });
@@ -155,6 +173,14 @@ app.get("/avaliadores", async (req: Request, res: Response) => {
     res.json(usuarios);
 });
 
+app.get("/admins", async (req: Request, res: Response) => {
+    const usuarios = await usuarioRepository.findAllByType("admin");
+    if (!usuarios || usuarios.length === 0) {
+        return res.status(200).json({ message: "Nenhum admin encontrado", data: [] });
+    }
+    res.json(usuarios);
+});
+
 app.put("/usuarios/:id", async (req: Request, res: Response) => {
     const id = parseInt(req.params.id);
     if (isNaN(id)) return res.status(400).json({ message: "ID inválido" });
@@ -168,6 +194,31 @@ app.delete("/usuarios/:id", async (req: Request, res: Response) => {
     if (isNaN(id)) return res.status(400).json({ message: "ID inválido" });
     await usuarioRepository.delete(id);
     res.status(204).send();
+});
+
+// Endpoints: Login
+app.post("/login", async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({ message: "Email e senha são obrigatórios" });
+    }
+
+    try {
+        const usuario = await usuarioRepository.findByEmail(email);
+        if (!usuario) {
+            return res.status(401).json({ message: "Usuário não encontrado" });
+        }
+
+        const isMatch = await bcrypt.compare(password, usuario.senha);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Senha incorreta" });
+        }
+
+        const token = jwt.sign({ id: usuario.id, email: usuario.email, tipo: usuario.tipo }, JWT_SECRET, { expiresIn: "1h" });
+        res.status(200).json({ message: "Login bem-sucedido", token, tipo: usuario.tipo });
+    } catch (error) {
+        res.status(500).json({ message: "Erro interno no servidor", details: (error as Error).message });
+    }
 });
 
 // Endpoints: Projetos

@@ -6,12 +6,29 @@ import AutorList from "./components/AutorList";
 import UsuarioForm from "./components/UsuarioForm";
 import AvaliacaoForm from "./components/AvaliacaoForm";
 import PremioForm from "./components/PremioForm";
+import Login from "./components/Login";
 import axios from "axios";
 
 const App: React.FC = () => {
   const [refresh, setRefresh] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
+  const [userType, setUserType] = useState<string | null>(localStorage.getItem("userType"));
 
   const handleRefresh = () => setRefresh((prev) => prev + 1);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const type = localStorage.getItem("userType");
+    setIsAuthenticated(!!token);
+    setUserType(type);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userType");
+    setIsAuthenticated(false);
+    setUserType(null);
+  };
 
   return (
       <Router>
@@ -27,11 +44,30 @@ const App: React.FC = () => {
               <nav className="space-x-6">
                 <ul className="flex space-x-4">
                   <li><Link to="/" className="text-white hover:text-innovate-accent transition">Projetos</Link></li>
-                  <li><Link to="/novo-projeto" className="text-white hover:text-innovate-accent transition">Novo Projeto</Link></li>
+                  {isAuthenticated && userType === "autor" && (
+                      <li><Link to="/novo-projeto" className="text-white hover:text-innovate-accent transition">Novo Projeto</Link></li>
+                  )}
                   <li><Link to="/autores" className="text-white hover:text-innovate-accent transition">Autores</Link></li>
-                  <li><Link to="/novo-usuario" className="text-white hover:text-innovate-accent transition">Novo Usuário</Link></li>
-                  <li><Link to="/nova-avaliacao" className="text-white hover:text-innovate-accent transition">Nova Avaliação</Link></li>
-                  <li><Link to="/novo-premio" className="text-white hover:text-innovate-accent transition">Novo Prêmio</Link></li>
+                  {isAuthenticated && (userType === "avaliador" || userType === "admin") && (
+                      <li><Link to="/nova-avaliacao" className="text-white hover:text-innovate-accent transition">Nova Avaliação</Link></li>
+                  )}
+                  {isAuthenticated && userType === "admin" && (
+                      <li><Link to="/novo-usuario" className="text-white hover:text-innovate-accent transition">Novo Usuário</Link></li>
+                  )}
+                  {isAuthenticated && userType === "admin" && (
+                      <li><Link to="/novo-premio" className="text-white hover:text-innovate-accent transition">Novo Prêmio</Link></li>
+                  )}
+                  <li>
+                    {isAuthenticated ? (
+                        <button onClick={handleLogout} className="text-white hover:text-innovate-accent transition">
+                          Logout
+                        </button>
+                    ) : (
+                        <Link to="/login" className="text-white hover:text-innovate-accent transition">
+                          Login
+                        </Link>
+                    )}
+                  </li>
                 </ul>
               </nav>
             </div>
@@ -43,6 +79,7 @@ const App: React.FC = () => {
             <Route path="/novo-usuario" element={<UsuarioForm onCreate={handleRefresh} />} />
             <Route path="/nova-avaliacao" element={<AvaliacaoForm onCreate={handleRefresh} />} />
             <Route path="/novo-premio" element={<PremioForm onCreate={handleRefresh} />} />
+            <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} setUserType={setUserType} />} />
           </Routes>
           <footer className="bg-innovate-blue text-white p-6 mt-12">
             <div className="max-w-7xl mx-auto text-center">

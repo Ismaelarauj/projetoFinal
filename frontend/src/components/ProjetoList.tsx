@@ -87,9 +87,11 @@ const ProjetoList: React.FC = () => {
 
     return (
         <div className="App min-h-screen bg-innovate-gray">
-            <section className="bg-hero-pattern bg-cover bg-center py-20 text-center text-innovate-dark">
-                <h2 className="text-4xl font-display mb-4">Explore os Projetos do Innovate Hub</h2>
-                <p className="text-lg max-w-2xl mx-auto">Descubra as inovações que estão moldando o futuro.</p>
+            <section className="bg-hero-pattern bg-cover bg-center py-20 text-center text-innovate-dark flex justify-center">
+                <div className="text-center">
+                    <h2 className="text-4xl font-display mb-4">Explore os Projetos do Innovate Hub</h2>
+                    <p className="text-lg max-w-2xl mx-auto" style={{ textAlign: 'center' }}>Descubra as inovações que estão moldando o futuro.</p>
+                </div>
             </section>
             <section className="max-w-6xl mx-auto px-6 py-12">
                 <h3 className="text-2xl font-display text-innovate-blue mb-6 text-center">Lista de Projetos</h3>

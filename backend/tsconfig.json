@@ -8,6 +8,9 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-
-  }
+    "moduleResolution": "node",
+    "types": ["node", "bcryptjs"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }
