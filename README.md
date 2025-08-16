@@ -1,5 +1,8 @@
 # Gerenciamento de Projetos
 
+## Autores:
+Breno Novais, Ismael Pereira
+
 ## Descrição
 Este projeto é uma aplicação full-stack para gerenciamento de projetos científicos ou acadêmicos, abrangendo prêmios, autores, avaliadores, projetos e avaliações. O backend é desenvolvido em Node.js com TypeORM e MySQL, oferecendo uma API REST para gerenciar as entidades. O frontend é construído com React.js e Tailwind CSS, proporcionando uma interface intuitiva para criar, listar, atualizar e excluir dados. Regras de negócio, como a proibição de avaliadores avaliarem seus próprios projetos, foram implementadas para garantir a integridade dos dados.
 

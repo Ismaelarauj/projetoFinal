@@ -1,11 +1,21 @@
 {
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "concurrently": "^8.2.2"
   },
   "scripts": {
     "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "start:backend": "cd backend && npm start",
     "start:frontend": "cd frontend && npm start"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "class-validator": "^0.14.2",
+    "cors": "^2.8.5",
+    "gerador-validador-cpf": "^6.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "typeorm": "^0.3.25"
   }
 }

@@ -8,7 +8,7 @@ export const AppDataSource = new DataSource({
     host: process.env.DB_HOST || "localhost", // Fallback para desenvolvimento
     port: parseInt(process.env.DB_PORT || "3306"), // Fallback já presente
     username: process.env.DB_USERNAME || "root", // Fallback para desenvolvimento
-    password: process.env.DB_PASSWORD || "Francandrade@6810", // Fallback para desenvolvimento
+    password: process.env.DB_PASSWORD || "Aces1234*", // Fallback para desenvolvimento
     database: process.env.DB_DATABASE || "gerenciamento_projetos", // Fallback para desenvolvimento
     synchronize: true, // Use migrações em produção (defina como false em produção)
     logging: true, // Ativado para depuração

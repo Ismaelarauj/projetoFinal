@@ -7,27 +7,23 @@ export class AvaliacaoRepository {
     private repository = AppDataSource.getRepository(Avaliacao);
 
     async create(avaliacao: Partial<Avaliacao>, projetoId: number, avaliadorId: number): Promise<Avaliacao> {
-        if (typeof avaliacao.nota !== "number" || isNaN(avaliacao.nota) || avaliacao.nota < 0 || avaliacao.nota > 10) {
-            throw new Error("Nota inválida. Deve ser um número entre 0 e 10.");
-        }
-
-        const newAvaliacao = this.repository.create({
-            ...avaliacao,
-            dataAvaliacao: new Date(avaliacao.dataAvaliacao || new Date()),
-            nota: Number(avaliacao.nota),
-        });
-
         const projeto = await AppDataSource.getRepository(Projeto).findOneBy({ id: projetoId });
         if (!projeto) {
             throw new Error("Projeto não encontrado para o ID fornecido");
         }
-        newAvaliacao.projeto = projeto;
 
         const avaliador = await AppDataSource.getRepository(Usuario).findOneBy({ id: avaliadorId });
         if (!avaliador || avaliador.tipo !== "avaliador") {
             throw new Error("Avaliador não encontrado ou inválido para o ID fornecido");
         }
-        newAvaliacao.avaliador = avaliador;
+
+        const newAvaliacao = this.repository.create({
+            ...avaliacao,
+            projeto,
+            avaliador,
+            dataAvaliacao: avaliacao.dataAvaliacao ? new Date(avaliacao.dataAvaliacao) : new Date(),
+            nota: Number(avaliacao.nota),
+        });
 
         try {
             const savedAvaliacao = await this.repository.save(newAvaliacao);
@@ -49,9 +45,28 @@ export class AvaliacaoRepository {
     }
 
     async update(id: number, avaliacao: Partial<Avaliacao>): Promise<Avaliacao | null> {
-        const result = await this.repository.update(id, avaliacao);
-        if (result.affected === 0) return null;
-        return this.repository.findOneBy({ id });
+        const existingAvaliacao = await this.repository.findOneBy({ id });
+        if (!existingAvaliacao) {
+            return null;
+        }
+
+        // Atualizar apenas os campos fornecidos
+        if (avaliacao.nota !== undefined) existingAvaliacao.nota = Number(avaliacao.nota);
+        if (avaliacao.parecer !== undefined) existingAvaliacao.parecer = avaliacao.parecer;
+        if (avaliacao.dataAvaliacao !== undefined) existingAvaliacao.dataAvaliacao = new Date(avaliacao.dataAvaliacao);
+
+        // Manter relações existentes, atualizando apenas se novos IDs forem fornecidos
+        if (avaliacao.projeto?.id !== undefined) {
+            const projeto = await AppDataSource.getRepository(Projeto).findOneBy({ id: avaliacao.projeto.id });
+            if (projeto) existingAvaliacao.projeto = projeto;
+        }
+        if (avaliacao.avaliadorId !== undefined) {
+            const avaliador = await AppDataSource.getRepository(Usuario).findOneBy({ id: avaliacao.avaliadorId });
+            if (avaliador && avaliador.tipo === "avaliador") existingAvaliacao.avaliador = avaliador;
+        }
+
+        const result = await this.repository.save(existingAvaliacao);
+        return result;
     }
 
     async delete(id: number): Promise<void> {
