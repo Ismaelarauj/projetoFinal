@@ -32,10 +32,14 @@ export class Projeto {
     @Column({ default: false })
     vencedor!: boolean;
 
-    @ManyToOne(() => Premio, premio => premio.projetos)
+    @Column({ nullable: false })
+    @IsNotEmpty({ message: "Autor principal é obrigatório" })
+    autorPrincipalId!: number; // Novo campo para identificar o autor principal
+
+    @ManyToOne(() => Premio, (premio) => premio.projetos)
     premio!: Premio;
 
-    @ManyToMany(() => Usuario, (usuario) => usuario.projetos, { eager: true }) // Carrega autores automaticamente
+    @ManyToMany(() => Usuario, (usuario) => usuario.projetos, { eager: true })
     @JoinTable({
         name: "projeto_autores",
         joinColumn: { name: "projetoId", referencedColumnName: "id" },

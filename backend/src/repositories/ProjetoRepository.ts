@@ -1,4 +1,4 @@
-import { Repository, In } from "typeorm";
+import { Repository, In, SelectQueryBuilder } from "typeorm";
 import { AppDataSource } from "../data-source";
 import { Projeto } from "../entities/Projeto";
 import { Usuario } from "../entities/Usuario";
@@ -13,20 +13,49 @@ export class ProjetoRepository {
     async create(projeto: Projeto, autorIds: number[]): Promise<Projeto> {
         const savedProjeto = await this.repository.save(projeto);
         if (autorIds && autorIds.length > 0) {
-            const autores = await AppDataSource.getRepository(Usuario).findBy({ id: In(autorIds), tipo: "autor" });
-            savedProjeto.autores = autores;
+            savedProjeto.autores = await AppDataSource.getRepository(Usuario).findBy({ id: In(autorIds), tipo: "autor" });
             await this.repository.save(savedProjeto);
         }
         return savedProjeto;
     }
 
     async findAll(relations: string[] = []): Promise<Projeto[]> {
-        const defaultRelations = relations.length > 0 ? relations : ["avaliacoes", "avaliacoes.avaliador", "autores", "premio"];
-        const projetos = await this.repository.find({
-            relations: defaultRelations,
+        let query: SelectQueryBuilder<Projeto> = this.repository.createQueryBuilder("projeto");
+
+        // Normaliza e valida relações
+        const validRelations = relations.length > 0 ? relations.map(r => r.trim()).filter(r => r) : ["avaliacoes", "autores", "premio"];
+
+        // Conjunto para rastrear relações já adicionadas
+        const joinedRelations = new Set<string>();
+
+        // Adiciona relações diretas
+        validRelations.forEach(relation => {
+            if (!relation.includes(".")) {
+                if (!joinedRelations.has(relation)) {
+                    query.leftJoinAndSelect(`projeto.${relation}`, relation);
+                    joinedRelations.add(relation);
+                }
+            }
         });
-        console.log("Projetos carregados com relações:", projetos);
-        return projetos;
+
+        // Adiciona relações aninhadas
+        validRelations.filter(r => r.includes(".")).forEach(relation => {
+            const [parent, child] = relation.split(".");
+            if (!joinedRelations.has(parent)) {
+                query.leftJoinAndSelect(`projeto.${parent}`, parent);
+                joinedRelations.add(parent);
+            }
+            const nestedAlias = `${parent}_${child}`;
+            query.leftJoinAndSelect(`${parent}.${child}`, nestedAlias);
+            joinedRelations.add(relation);
+        });
+
+        try {
+            const projetos = await query.getMany();
+            return projetos;
+        } catch (error) {
+            throw error;
+        }
     }
 
     async findNotEvaluated(): Promise<Projeto[]> {
@@ -62,8 +91,7 @@ export class ProjetoRepository {
         if (!projeto) return null;
         Object.assign(projeto, data);
         if (autorIds && autorIds.length > 0) {
-            const autores = await AppDataSource.getRepository(Usuario).findBy({ id: In(autorIds), tipo: "autor" });
-            projeto.autores = autores;
+            projeto.autores = await AppDataSource.getRepository(Usuario).findBy({ id: In(autorIds), tipo: "autor" });
         }
         return await this.repository.save(projeto);
     }

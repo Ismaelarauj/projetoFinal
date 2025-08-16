@@ -8,7 +8,7 @@ export class Avaliacao {
     @PrimaryGeneratedColumn()
     id!: number;
 
-    @Column("decimal", { precision: 4, scale: 1 }) // Suporta decimais (ex.: 5.5, 10.0)
+    @Column("decimal", { precision: 4, scale: 1 })
     @IsNotEmpty({ message: "A nota é obrigatória" })
     @IsNumber({}, { message: "A nota deve ser um número" })
     @Min(0, { message: "A nota mínima é 0" })
@@ -28,4 +28,8 @@ export class Avaliacao {
 
     @ManyToOne(() => Usuario, (usuario) => usuario.avaliacoes)
     avaliador!: Usuario;
+
+    get avaliadorId(): number {
+        return this.avaliador.id;
+    }
 }

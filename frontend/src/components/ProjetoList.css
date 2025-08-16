@@ -1,36 +1,58 @@
+/* Estilização da tabela - Design Profissional e Científico */
 .planilha {
     border-collapse: collapse;
     background-color: white;
-    border: 1px solid #ddd;
+    border: 2px solid #e0e7ff; /* Borda sutil em tom científico */
     width: 100%;
+    border-radius: 0.75rem; /* Bordas mais arredondadas */
+    overflow: hidden;
+    box-shadow: 0 6px 12px rgba(30, 64, 175, 0.1); /* Sombra suave em azul */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.planilha:hover {
+    transform: translateY(-3px); /* Levanta ao hover */
+    box-shadow: 0 8px 16px rgba(30, 64, 175, 0.15);
 }
 
 .planilha th,
 .planilha td {
-    border: 1px solid #ddd;
-    padding: 8px;
+    border: 1px solid #e0e7ff; /* Borda consistente com o tema */
+    padding: 12px; /* Mais espaço para um look profissional */
     text-align: left;
     vertical-align: top;
-    min-height: 40px;
+    min-height: 50px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .planilha th {
-    background-color: #1e40af;
+    background: linear-gradient(to right, #1e40af, #60a5fa); /* Gradiente científico */
     color: white;
-    font-weight: bold;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px; /* Estilo técnico */
+    position: relative;
+    z-index: 1;
 }
 
 .planilha td {
-    background-color: #f9fafb;
+    background-color: #f9fafb; /* Fundo claro */
+    color: #1e293b; /* Texto escuro para contraste */
 }
 
+.planilha td:hover {
+    background-color: #eef2ff; /* Hover sutil */
+    color: #1e40af;
+}
+
+/* Contêiner das tabelas (mantido como está) */
 .table-container {
     display: flex;
     flex-direction: row;
     gap: 20px;
     flex-wrap: nowrap;
-    justify-content: center; /* Adicionado para centralizar horizontalmente os filhos */
-    width: 100%; /* Garante que o contêiner ocupe a largura total */
+    justify-content: center;
+    width: 100%;
 }
 
 img.w-12 {
@@ -38,23 +60,34 @@ img.w-12 {
     height: auto;
 }
 
-/* Removido o .text-center p para evitar conflitos, e centralização ajustada */
+/* Centralização de texto (mantido como está) */
 .text-center p {
     margin: 4px 0;
-    text-align: center !important; /* Força a centralização do texto */
+    text-align: center !important;
 }
 
-/* Ajuste para o botão FaPlus */
+/* Ajuste para o botão FaPlus (mantido como está) */
 button .fa-plus {
     font-size: 1.2rem;
 }
 
+/* Responsividade (mantido como está) */
 @media (max-width: 768px) {
     .table-container {
         flex-direction: column;
-        align-items: center; /* Centraliza os itens verticalmente em telas menores */
+        align-items: center;
     }
     .planilha {
         width: 100%;
     }
+}
+
+/* Animações (adicionadas para a planilha) */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.planilha {
+    animation: fadeIn 0.5s ease-out;
 }

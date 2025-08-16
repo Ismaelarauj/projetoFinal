@@ -2,6 +2,7 @@ import { Usuario } from "./entities/Usuario";
 import { UsuarioRepository } from "./repositories/UsuarioRepository";
 import * as bcrypt from "bcryptjs";
 import cpfGenerator from "gerador-validador-cpf";
+import { validate } from "class-validator";
 
 export class AdminInitializer {
     private usuarioRepository: UsuarioRepository;
@@ -22,7 +23,7 @@ export class AdminInitializer {
             admin.tipo = "admin";
             admin.nome = "Admin Innovate";
             // Preenchendo todos os campos obrigatórios
-            admin.cpf = cpfGenerator.generate({ format: false }); // Gera CPF formatado (ex.: "123.456.789-00")
+            admin.cpf = cpfGenerator.generate({ format: false }); // Gera CPF sem formatação (ex.: "12345678900")
             admin.dataNascimento = "1990-01-01"; // Data fictícia no formato YYYY-MM-DD
             admin.telefone = "(11) 98765-4321"; // Telefone fictício no formato (99) 99999-9999
             admin.pais = "Brasil";
@@ -34,8 +35,20 @@ export class AdminInitializer {
             admin.lote = "123";
             admin.numero = "10";
 
-            await this.usuarioRepository.create(admin);
-            console.log("Usuário admin criado com sucesso.");
+            // Adicionar validação para garantir consistência
+            const errors = await validate(admin);
+            if (errors.length > 0) {
+                console.error("Erro de validação ao criar admin:", errors);
+                throw new Error("Falha na validação do admin");
+            }
+
+            try {
+                const newAdmin = await this.usuarioRepository.create(admin);
+                console.log("Usuário admin criado com sucesso:", newAdmin);
+            } catch (error) {
+                console.error("Erro ao criar usuário admin:", (error as Error).message);
+                throw error;
+            }
         } else {
             console.log("Usuário admin já existe.");
         }

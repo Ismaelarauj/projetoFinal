@@ -22,7 +22,7 @@ export class PremioRepository {
         return this.repository.findOneBy({ id });
     }
 
-    async findAll(): Promise<Premio[]> {
-        return this.repository.find();
+    async findAll(relations: string[] = []): Promise<Premio[]> {
+        return this.repository.find({ relations });
     }
 }

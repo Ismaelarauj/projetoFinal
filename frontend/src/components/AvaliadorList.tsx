@@ -1,64 +1,73 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faEdit, faTrash, faTimes, faEnvelope, faIdCard, faPhone, faDiagramProject } from "@fortawesome/free-solid-svg-icons";
+import { faUser, faEdit, faTrash, faTimes, faFilter, faEnvelope, faIdCard, faPhone, faBriefcase, faStar } from "@fortawesome/free-solid-svg-icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { UsuarioCompleto } from "../types/types";
 import UsuarioForm from "./UsuarioForm";
 
-interface AutorListProps {
+interface AvaliadorListProps {
     userType: string | null;
     onNavigate: (path: string) => void;
 }
 
-const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
-    const [autores, setAutores] = useState<UsuarioCompleto[]>([]);
-    const [selectedAutor, setSelectedAutor] = useState<UsuarioCompleto | null>(null);
+const AvaliadorList: React.FC<AvaliadorListProps> = ({ userType, onNavigate }) => {
+    const [avaliadores, setAvaliadores] = useState<UsuarioCompleto[]>([]);
+    const [selectedAvaliador, setSelectedAvaliador] = useState<UsuarioCompleto | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
     const [showForm, setShowForm] = useState<boolean>(false);
     const [formData, setFormData] = useState<UsuarioCompleto | null>(null);
+    const [filtro, setFiltro] = useState<"todos" | "ativos" | "inativos">("todos");
     const [feedback, setFeedback] = useState<{ message: string; isSuccess: boolean } | null>(null);
     const [loading, setLoading] = useState(true);
     const currentUserId = parseInt(localStorage.getItem("userId") || "0");
 
-    const fetchAutores = async () => {
+    const fetchAvaliadores = async () => {
         try {
-            const response = await axios.get("http://localhost:3001/autores", {
+            const response = await axios.get("http://localhost:3001/avaliadores", {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             });
             if (response.data.message) {
                 setFeedback({ message: response.data.message, isSuccess: false });
-                setAutores([]);
+                setAvaliadores([]);
             } else {
-                const autoresData = response.data.map((a: any) => ({
+                const avaliadoresData = response.data.map((a: any) => ({
                     id: a.id,
                     nome: a.nome,
                     email: a.email,
                     cpf: a.cpf,
                     telefone: a.telefone,
                     tipo: a.tipo,
-                    projetos: a.projetos || [],
+                    especialidade: a.especialidade || null,
+                    avaliacoes: a.avaliacoes || [],
                 }));
-                setAutores(autoresData);
+                setAvaliadores(avaliadoresData);
                 setFeedback(null);
             }
         } catch (error: any) {
-            setFeedback({ message: error.response?.data?.message || "Erro ao carregar autores.", isSuccess: false });
-            console.error("Erro ao buscar autores:", error);
-            setAutores([]);
+            setFeedback({ message: error.response?.data?.message || "Erro ao carregar avaliadores.", isSuccess: false });
+            console.error("Erro ao buscar avaliadores:", error);
+            setAvaliadores([]);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchAutores();
-    }, []);
+        fetchAvaliadores();
+    }, [filtro]);
+
+    const avaliadoresFiltrados = avaliadores.filter((avaliador) => {
+        if (filtro === "todos") return true;
+        if (filtro === "ativos") return avaliador.avaliacoes && avaliador.avaliacoes.length > 0;
+        if (filtro === "inativos") return !avaliador.avaliacoes || avaliador.avaliacoes.length === 0;
+        return true;
+    });
 
     const handleDelete = async (id: number) => {
-        const autorToDelete = autores.find((a) => a.id === id);
-        if (autorToDelete && autorToDelete.projetos && autorToDelete.projetos.length > 0) {
-            setFeedback({ message: "Não é possível excluir este autor, pois ele está associado a um ou mais projetos.", isSuccess: false });
+        const avaliadorToDelete = avaliadores.find((a) => a.id === id);
+        if (avaliadorToDelete && avaliadorToDelete.avaliacoes && avaliadorToDelete.avaliacoes.length > 0) {
+            setFeedback({ message: "Não é possível excluir este avaliador, pois ele já avaliou um ou mais projetos.", isSuccess: false });
             setShowDeleteConfirm(null);
             return;
         }
@@ -67,20 +76,20 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
             const token = localStorage.getItem("token");
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
             await axios.delete(`http://localhost:3001/usuarios/${id}`, { headers });
-            setAutores(autores.filter((autor) => autor.id !== id));
-            setSelectedAutor(null);
+            setAvaliadores(avaliadores.filter((a) => a.id !== id));
+            setSelectedAvaliador(null);
             setShowDeleteConfirm(null);
-            setFeedback({ message: "Autor excluído com sucesso!", isSuccess: true });
+            setFeedback({ message: "Avaliador excluído com sucesso!", isSuccess: true });
         } catch (error: any) {
-            setFeedback({ message: error.response?.data?.message || "Erro ao excluir autor.", isSuccess: false });
-            console.error("Erro ao excluir autor:", error);
+            setFeedback({ message: error.response?.data?.message || "Erro ao excluir avaliador.", isSuccess: false });
+            console.error("Erro ao excluir avaliador:", error);
             setShowDeleteConfirm(null);
         }
     };
 
-    const handleEdit = async (autor: UsuarioCompleto) => {
+    const handleEdit = async (avaliador: UsuarioCompleto) => {
         try {
-            const response = await axios.get(`http://localhost:3001/usuarios/${autor.id}`, {
+            const response = await axios.get(`http://localhost:3001/usuarios/${avaliador.id}`, {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
             });
             setFormData(response.data);
@@ -95,7 +104,7 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
     const handleFormClose = () => {
         setShowForm(false);
         setFormData(null);
-        fetchAutores();
+        fetchAvaliadores();
     };
 
     const handleFormSave = async (updatedUsuario: Partial<UsuarioCompleto>) => {
@@ -109,6 +118,7 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                 cpf: updatedUsuario.cpf,
                 telefone: updatedUsuario.telefone,
                 tipo: updatedUsuario.tipo,
+                especialidade: updatedUsuario.especialidade || null,
                 senha: updatedUsuario.senha,
             };
             const filteredData = Object.fromEntries(
@@ -117,24 +127,24 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
 
             if (updatedUsuario.id === 0) {
                 const response = await axios.post("http://localhost:3001/usuarios", filteredData, config);
-                setAutores([...autores, response.data]);
-                setFeedback({ message: "Autor criado com sucesso!", isSuccess: true });
+                setAvaliadores([...avaliadores, response.data]);
+                setFeedback({ message: "Avaliador criado com sucesso!", isSuccess: true });
             } else {
                 const response = await axios.put(`http://localhost:3001/usuarios/${updatedUsuario.id}`, filteredData, config);
-                setAutores(autores.map((a) => (a.id === updatedUsuario.id ? response.data : a)));
-                setFeedback({ message: "Autor atualizado com sucesso!", isSuccess: true });
+                setAvaliadores(avaliadores.map((a) => (a.id === updatedUsuario.id ? response.data : a)));
+                setFeedback({ message: "Avaliador atualizado com sucesso!", isSuccess: true });
             }
             handleFormClose();
         } catch (error: any) {
-            setFeedback({ message: error.response?.data?.message || "Erro ao salvar autor.", isSuccess: false });
+            setFeedback({ message: error.response?.data?.message || "Erro ao salvar avaliador.", isSuccess: false });
             console.error("Erro ao salvar:", error);
             throw error;
         }
     };
 
-    const handleToggleAutor = (autor: UsuarioCompleto) => {
+    const handleToggleAvaliador = (avaliador: UsuarioCompleto) => {
         if (userType === "admin") {
-            setSelectedAutor(selectedAutor?.id === autor.id ? null : autor);
+            setSelectedAvaliador(selectedAvaliador?.id === avaliador.id ? null : avaliador);
         }
     };
 
@@ -160,8 +170,8 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                     transition={{ duration: 0.6, ease: "easeOut" }}
                     className="relative max-w-3xl mx-auto"
                 >
-                    <h2 className="text-4xl font-bold font-sans mb-4 drop-shadow-md">Autores do Innovate Hub</h2>
-                    <p className="text-lg font-medium max-w-2xl mx-auto">Conheça os criadores por trás dos projetos que estão moldando o futuro da inovação.</p>
+                    <h2 className="text-4xl font-bold font-sans mb-4 drop-shadow-md">Avaliadores do Innovate Hub</h2>
+                    <p className="text-lg font-medium max-w-2xl mx-auto">Conheça os especialistas que revisam e impulsionam os projetos inovadores.</p>
                 </motion.div>
             </section>
             <section className="max-w-6xl mx-auto px-6 py-12">
@@ -188,22 +198,38 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                         </motion.div>
                     )}
                 </AnimatePresence>
-                {autores.length > 0 ? (
+                <div className="mb-6 flex justify-between items-center">
+                    <div>
+                        <label className="mr-2 text-lg font-medium text-gray-800">Filtrar por:</label>
+                        <motion.select
+                            value={filtro}
+                            onChange={(e) => setFiltro(e.target.value as "todos" | "ativos" | "inativos")}
+                            className="p-2 border border-[#D1D5DB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#14B8A6] transition bg-white text-[#1E3A8A]"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                        >
+                            <option value="todos">Todos</option>
+                            <option value="ativos">Ativos</option>
+                            <option value="inativos">Inativos</option>
+                        </motion.select>
+                    </div>
+                </div>
+                {avaliadoresFiltrados.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {autores.map((autor, index) => (
+                        {avaliadoresFiltrados.map((avaliador, index) => (
                             <motion.div
-                                key={autor.id}
+                                key={avaliador.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                                className={`bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border ${selectedAutor?.id === autor.id ? 'border-[#14B8A6]' : 'border-[#D1D5DB]'}`}
-                                onClick={() => handleToggleAutor(autor)}
+                                className={`bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border ${selectedAvaliador?.id === avaliador.id ? 'border-[#14B8A6]' : 'border-[#D1D5DB]'}`}
+                                onClick={() => handleToggleAvaliador(avaliador)}
                             >
                                 <div className="flex items-center mb-4">
                                     <FontAwesomeIcon icon={faUser} className="text-[#1E3A8A] text-2xl mr-3" />
-                                    <h3 className="text-xl font-semibold text-[#1E3A8A] truncate max-w-full" title={autor.nome}>{autor.nome}</h3>
+                                    <h3 className="text-xl font-semibold text-[#1E3A8A] truncate max-w-full" title={avaliador.nome}>{avaliador.nome}</h3>
                                 </div>
-                                {selectedAutor?.id === autor.id && (
+                                {selectedAvaliador?.id === avaliador.id && (
                                     <motion.div
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: "auto" }}
@@ -218,7 +244,7 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                                                 <FontAwesomeIcon icon={faUser} className="text-[#1E3A8A] mr-3 flex-shrink-0" />
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-medium text-gray-600">Nome</p>
-                                                    <p className="text-gray-800 truncate" title={autor.nome}>{autor.nome}</p>
+                                                    <p className="text-gray-800 truncate" title={avaliador.nome}>{avaliador.nome}</p>
                                                 </div>
                                             </motion.div>
                                             <motion.div
@@ -228,7 +254,7 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                                                 <FontAwesomeIcon icon={faEnvelope} className="text-[#1E3A8A] mr-3 flex-shrink-0" />
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-medium text-gray-600">Email</p>
-                                                    <p className="text-gray-800 truncate" title={autor.email}>{autor.email}</p>
+                                                    <p className="text-gray-800 truncate" title={avaliador.email}>{avaliador.email}</p>
                                                 </div>
                                             </motion.div>
                                             <motion.div
@@ -238,7 +264,7 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                                                 <FontAwesomeIcon icon={faIdCard} className="text-[#1E3A8A] mr-3 flex-shrink-0" />
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-medium text-gray-600">CPF</p>
-                                                    <p className="text-gray-800 truncate" title={autor.cpf}>{autor.cpf}</p>
+                                                    <p className="text-gray-800 truncate" title={avaliador.cpf}>{avaliador.cpf}</p>
                                                 </div>
                                             </motion.div>
                                             <motion.div
@@ -248,26 +274,34 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                                                 <FontAwesomeIcon icon={faPhone} className="text-[#1E3A8A] mr-3 flex-shrink-0" />
                                                 <div className="min-w-0 flex-1">
                                                     <p className="text-sm font-medium text-gray-600">Telefone</p>
-                                                    <p className="text-gray-800 truncate" title={autor.telefone}>{autor.telefone}</p>
+                                                    <p className="text-gray-800 truncate" title={avaliador.telefone}>{avaliador.telefone}</p>
                                                 </div>
                                             </motion.div>
                                             <motion.div
                                                 whileHover={{ scale: 1.02 }}
-                                                className="flex items-center bg-gray-50 p-4 rounded-md border border-[#D1D5DB] shadow-sm hover:shadow-md transition w-full sm:col-span-2 min-w-0"
+                                                className="flex items-center bg-gray-50 p-4 rounded-md border border-[#D1D5DB] shadow-sm hover:shadow-md transition w-full min-w-0"
                                             >
-                                                <FontAwesomeIcon icon={faDiagramProject} className="text-[#1E3A8A] mr-3 flex-shrink-0" />
+                                                <FontAwesomeIcon icon={faBriefcase} className="text-[#1E3A8A] mr-3 flex-shrink-0" />
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="text-sm font-medium text-gray-600">Projetos</p>
-                                                    <p className="text-gray-800 whitespace-normal word-break-break-word" title={autor.projetos.map((projeto: { id: number; titulo: string }) => projeto.titulo).join(", ") || "Nenhum"}>
-                                                        {autor.projetos.map((projeto: { id: number; titulo: string }) => projeto.titulo).join(", ") || "Nenhum"}
-                                                    </p>
+                                                    <p className="text-sm font-medium text-gray-600">Especialidade</p>
+                                                    <p className="text-gray-800 truncate" title={avaliador.especialidade || "Nenhuma"}>{avaliador.especialidade || "Nenhuma"}</p>
+                                                </div>
+                                            </motion.div>
+                                            <motion.div
+                                                whileHover={{ scale: 1.02 }}
+                                                className="flex items-center bg-gray-50 p-4 rounded-md border border-[#D1D5DB] shadow-sm hover:shadow-md transition w-full min-w-0"
+                                            >
+                                                <FontAwesomeIcon icon={faStar} className="text-[#1E3A8A] mr-3 flex-shrink-0" />
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-medium text-gray-600">Avaliações</p>
+                                                    <p className="text-gray-800">{avaliador.avaliacoes?.length || 0}</p>
                                                 </div>
                                             </motion.div>
                                         </div>
                                         {userType === "admin" && (
                                             <div className="mt-4 flex justify-end space-x-2">
                                                 <motion.button
-                                                    onClick={(e) => { e.stopPropagation(); handleEdit(autor); }}
+                                                    onClick={(e) => { e.stopPropagation(); handleEdit(avaliador); }}
                                                     className="p-2 bg-[#1E3A8A] text-white rounded-lg hover:bg-[#14B8A6] transition-colors"
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
@@ -275,7 +309,7 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                                                     <FontAwesomeIcon icon={faEdit} />
                                                 </motion.button>
                                                 <motion.button
-                                                    onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(autor.id); }}
+                                                    onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(avaliador.id); }}
                                                     className="p-2 bg-[#EF4444] text-white rounded-lg hover:bg-[#DC2626] transition-colors"
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
@@ -296,7 +330,7 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                         transition={{ duration: 0.3 }}
                         className="text-center text-gray-700 text-lg"
                     >
-                        Nenhum autor encontrado.
+                        Nenhum avaliador encontrado.
                     </motion.p>
                 )}
                 <AnimatePresence>
@@ -318,7 +352,7 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <h3 className="text-lg font-semibold text-[#1E3A8A] mb-4">Confirmar Exclusão</h3>
-                                <p className="text-gray-600 mb-6">Tem certeza que deseja excluir este autor?</p>
+                                <p className="text-gray-600 mb-6">Tem certeza que deseja excluir este avaliador?</p>
                                 <div className="flex justify-end space-x-4">
                                     <motion.button
                                         onClick={() => setShowDeleteConfirm(null)}
@@ -359,7 +393,7 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
                                 className="bg-white rounded-xl shadow-xl p-8 border border-[#D1D5DB] w-full max-w-4xl max-h-[80vh] overflow-y-auto"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <h3 className="text-2xl font-bold text-[#1E3A8A] mb-6 text-center">Editar Autor</h3>
+                                <h3 className="text-2xl font-bold text-[#1E3A8A] mb-6 text-center">Editar Avaliador</h3>
                                 <UsuarioForm
                                     initialData={formData}
                                     onSave={handleFormSave}
@@ -381,4 +415,4 @@ const AutorList: React.FC<AutorListProps> = ({ userType, onNavigate }) => {
     );
 };
 
-export default AutorList;
+export default AvaliadorList;
