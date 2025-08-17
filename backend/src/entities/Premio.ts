@@ -1,5 +1,6 @@
-import {Entity, PrimaryGeneratedColumn, Column, OneToMany} from "typeorm";
-import {Projeto} from "./Projeto";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from "typeorm";
+import { Projeto } from "./Projeto";
+import { Usuario } from "./Usuario";
 
 @Entity()
 export class Premio {
@@ -17,6 +18,14 @@ export class Premio {
 
     @Column()
     ano!: number;
-    @OneToMany(() => Projeto, projeto => projeto.premio)
+
+    @Column({ nullable: true })
+    criadoPorId!: number;
+
+    @ManyToOne(() => Usuario, (usuario) => usuario.premiosCriados)
+    @JoinColumn({ name: "criadoPorId" }) // Mapeia a coluna para a relação
+    criadoPor!: Usuario;
+
+    @OneToMany(() => Projeto, (projeto) => projeto.premio)
     projetos!: Projeto[];
 }
